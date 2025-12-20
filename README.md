@@ -62,14 +62,19 @@ ghost.md/
 │   ├── MarkdownRenderer.tsx  # Markdown to HTML renderer
 │   ├── Viewer.tsx       # Read-only viewer component
 │   └── ui.tsx           # UI components (Button, ThemeToggle, Toast)
+├── public/              # Static assets
+│   ├── robots.txt       # Search engine crawler instructions
+│   ├── sitemap.xml      # XML sitemap for search engines
+│   └── manifest.json    # PWA manifest file
 ├── App.tsx              # Main app component with routing
 ├── index.tsx            # Application entry point
-├── index.html           # HTML template
+├── index.html           # HTML template with SEO meta tags
 ├── index.css            # Tailwind CSS imports
 ├── utils.ts             # Utility functions (compression, helpers)
 ├── vite.config.ts       # Vite configuration
+├── vercel.json          # Vercel deployment configuration
 ├── tailwind.config.js   # Tailwind CSS configuration
-├── postcss.config.js    # PostCSS configuration
+├── postcss.config.cjs   # PostCSS configuration
 ├── tsconfig.json        # TypeScript configuration
 └── package.json         # Dependencies and scripts
 ```
@@ -81,6 +86,21 @@ ghost.md/
 - **Markdown Engine**: React-Markdown, Remark (GFM, Math), Rehype (KaTeX)
 - **Syntax Highlighting**: Shiki (Code blocks), PrismJS (Editor)
 - **Utilities**: LZ-String (Compression), Mermaid (Diagrams)
+
+## 🔍 SEO Optimizations
+
+GHOST.md is fully optimized for search engines with:
+
+- ✅ Comprehensive meta tags (description, keywords, robots)
+- ✅ Open Graph tags for social media sharing
+- ✅ Twitter Card support
+- ✅ Structured data (JSON-LD) for rich snippets
+- ✅ Canonical URLs to prevent duplicate content
+- ✅ robots.txt and sitemap.xml
+- ✅ PWA manifest for mobile optimization
+- ✅ Security headers via Vercel configuration
+
+**Note**: Before deploying, update the canonical URLs in `index.html`, `sitemap.xml`, and `robots.txt` with your actual domain name.
 
 ## 🤝 Contributing
 

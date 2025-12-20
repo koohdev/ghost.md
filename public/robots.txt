@@ -1,0 +1,11 @@
+# robots.txt for GHOST.md
+User-agent: *
+Allow: /
+
+# Disallow vercel.app subdomain if using custom domain
+# User-agent: *
+# Disallow: / if accessed via *.vercel.app
+
+# Sitemap location (update with your actual domain)
+Sitemap: https://ghost-md.vercel.app/sitemap.xml
+
