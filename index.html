@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" data-theme="gruvbox">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GHOST.md | Secure Markdown Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://icons.iconarchive.com/icons/microsoft/fluentui-emoji-3d/512/Ghost-3d-icon.png"
+    />
+    <style>
+      :root {
+        /* Default (Gruvbox Dark Hard) */
+        --bg-primary: #1d2021;
+        --bg-secondary: #282828;
+        --bg-tertiary: #3c3836;
+        --border-primary: #504945;
+        --accent-primary: #d79921;
+        --accent-hover: #b57614;
+        --fg-primary: #ebdbb2;
+        --fg-secondary: #a89984;
+        --scrollbar-thumb: #504945;
+        --scrollbar-hover: #665c54;
+      }
+
+      [data-theme="one-dark"] {
+        /* One Dark Pro Darker */
+        --bg-primary: #1e2227;
+        --bg-secondary: #181a1f;
+        --bg-tertiary: #21252b;
+        --border-primary: #181a1f;
+        --accent-primary: #61afef;
+        --accent-hover: #4fa1e1;
+        --fg-primary: #abb2bf;
+        --fg-secondary: #5c6370;
+        --scrollbar-thumb: #3e4451;
+        --scrollbar-hover: #4b5263;
+      }
+
+      body {
+        background-color: var(--bg-primary);
+        color: var(--fg-primary);
+        font-family: "Inter", sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      code,
+      pre,
+      textarea {
+        font-family: "JetBrains Mono", monospace;
+      }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-hover);
+      }
+
+      /* Markdown specific overrides */
+      .markdown-body h1,
+      .markdown-body h2,
+      .markdown-body h3 {
+        color: var(--accent-primary);
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        font-weight: 600;
+      }
+
+      .markdown-body h1 {
+        font-size: 2em;
+        border-bottom: 1px solid var(--border-primary);
+        padding-bottom: 0.3em;
+      }
+      .markdown-body h2 {
+        font-size: 1.5em;
+      }
+      .markdown-body p {
+        margin-bottom: 1em;
+        line-height: 1.6;
+      }
+
+      .markdown-body a {
+        color: var(--accent-primary);
+        text-decoration: none;
+      }
+      .markdown-body a:hover {
+        text-decoration: underline;
+      }
+      .markdown-body blockquote {
+        border-left: 4px solid var(--accent-primary);
+        background: var(--bg-secondary);
+        padding: 0.5em 1em;
+        margin-left: 0;
+        color: var(--fg-primary);
+      }
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-left: 1.5em;
+        margin-bottom: 1em;
+      }
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1em;
+      }
+      .markdown-body th,
+      .markdown-body td {
+        border: 1px solid var(--border-primary);
+        padding: 6px 13px;
+      }
+      .markdown-body th {
+        background-color: var(--bg-tertiary);
+        font-weight: 600;
+      }
+      .markdown-body hr {
+        border: 0;
+        border-top: 1px solid var(--border-primary);
+        margin: 1.5em 0;
+      }
+
+      .shiki {
+        background-color: transparent !important;
+        margin: 0 !important;
+        padding: 1rem !important;
+        overflow-x: auto;
+      }
+
+      /* Mermaid & Math Fixes */
+      .mermaid svg {
+        margin: 0 auto;
+        background-color: transparent !important;
+      }
+      .katex-display {
+        overflow-x: auto;
+        padding: 1rem 0;
+      }
+
+      /* Print Support Improvements */
+      @media print {
+        @page {
+          margin: 15mm;
+          size: auto;
+        }
+
+        /* Global Reset for Visibility: High Contrast Black on White */
+        *,
+        *::before,
+        *::after {
+          background-color: transparent !important;
+          color: #000 !important;
+          box-shadow: none !important;
+          text-shadow: none !important;
+        }
+
+        body {
+          background-color: #fff !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+
+        #root {
+          display: block !important;
+        }
+
+        /* Hide UI Elements */
+        header,
+        footer,
+        aside,
+        button,
+        input,
+        .fixed,
+        .Toaster,
+        #root > div > main > div:first-child {
+          display: none !important;
+        }
+
+        /* Layout Restoration */
+        #root > div,
+        #root > div > main {
+          display: block !important;
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+        }
+
+        #preview-content,
+        #root > div > main > div:last-child {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
+        }
+
+        /* Typography */
+        .markdown-body {
+          font-family: "Inter", sans-serif !important;
+          font-size: 11pt !important;
+          line-height: 1.5 !important;
+          color: #000 !important;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3 {
+          page-break-after: avoid;
+          margin-top: 1.5em !important;
+          margin-bottom: 0.5em !important;
+          border-bottom: 1px solid #ccc !important;
+        }
+
+        .markdown-body p,
+        .markdown-body ul,
+        .markdown-body ol {
+          margin-bottom: 0.8em !important;
+          orphans: 3;
+          widows: 3;
+        }
+
+        .markdown-body a {
+          text-decoration: underline !important;
+          font-weight: bold !important;
+        }
+
+        /* Code Block Fixes */
+        pre,
+        code,
+        .shiki {
+          white-space: pre-wrap !important; /* Wrap long lines */
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+          border: 1px solid #ddd !important;
+          background-color: #f5f5f5 !important;
+          border-radius: 4px !important;
+          padding: 8px !important;
+          font-family: "JetBrains Mono", monospace !important;
+          font-size: 9pt !important;
+          page-break-inside: avoid;
+        }
+
+        /* Force Syntax Highlighting to Black */
+        .shiki span,
+        code span,
+        .token {
+          color: #000 !important;
+        }
+
+        /* Table Fixes */
+        table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin-bottom: 1em !important;
+          page-break-inside: avoid;
+        }
+
+        th,
+        td {
+          border: 1px solid #999 !important;
+          padding: 4px 8px !important;
+          background-color: #fff !important;
+        }
+
+        th {
+          font-weight: bold !important;
+          background-color: #eee !important;
+        }
+
+        /* Image & Quote Fixes */
+        img,
+        svg {
+          max-width: 100% !important;
+          height: auto !important;
+          display: block;
+          margin: 1em auto;
+          page-break-inside: avoid;
+        }
+
+        blockquote {
+          border-left: 3px solid #000 !important;
+          padding-left: 1em !important;
+          margin-left: 0 !important;
+          font-style: italic !important;
+        }
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+          "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+          "react": "https://esm.sh/react@^19.2.3",
+          "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
+          "react/": "https://esm.sh/react@^19.2.3/",
+          "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
+          "shiki": "https://esm.sh/shiki@1.22.0",
+          "clsx": "https://esm.sh/clsx@^2.1.1",
+          "tailwind-merge": "https://esm.sh/tailwind-merge@^3.4.0",
+          "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+          "lz-string": "https://esm.sh/lz-string@^1.5.0",
+          "prismjs": "https://esm.sh/prismjs@1.29.0",
+          "react-simple-code-editor": "https://esm.sh/react-simple-code-editor@0.13.1",
+          "prismjs/": "https://esm.sh/prismjs@^1.30.0/",
+          "remark-math": "https://esm.sh/remark-math@6.0.0",
+          "rehype-katex": "https://esm.sh/rehype-katex@7.0.0",
+          "mermaid": "https://esm.sh/mermaid@10.9.0"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

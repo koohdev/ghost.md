@@ -1,0 +1,5 @@
+{
+  "name": "GHOST.md",
+  "description": "A purely client-side, VS Code-themed Markdown editor and viewer with URL-based sharing.",
+  "requestFramePermissions": []
+}
