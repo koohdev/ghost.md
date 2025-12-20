@@ -1,0 +1,22 @@
+{
+  "name": "GHOST.md - Professional Markdown Editor",
+  "short_name": "GHOST.md",
+  "description": "A professional, client-side Markdown editor inspired by VS Code. Features real-time preview, syntax highlighting, Mermaid diagrams, and complete privacy.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1d2021",
+  "theme_color": "#1d2021",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://icons.iconarchive.com/icons/microsoft/fluentui-emoji-3d/512/Ghost-3d-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "developer", "utilities"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
+

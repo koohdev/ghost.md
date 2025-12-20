@@ -12,7 +12,8 @@ dist
 dist-ssr
 *.local
 .zip
-ghost.md.zip
+*.zip
+*.md
 
 # Editor directories and files
 .vscode/*
