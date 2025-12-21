@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Editor } from './components/Editor';
-import { Viewer } from './components/Viewer';
 import { Toaster } from './components/ui';
+
+// Lazy load Viewer component - only loads when needed
+const Viewer = lazy(() => import('./components/Viewer').then(m => ({ default: m.Viewer })));
 
 // Main Layout Container
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -21,10 +23,16 @@ const Home = () => {
   );
 };
 
-// View Route (Read-only)
+// View Route (Read-only) - with loading fallback
 const ViewPage = () => {
   return (
-    <Viewer />
+    <Suspense fallback={
+      <div className="h-screen w-full flex items-center justify-center text-[var(--accent-primary)] bg-[var(--bg-primary)]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-current"></div>
+      </div>
+    }>
+      <Viewer />
+    </Suspense>
   );
 };
 
