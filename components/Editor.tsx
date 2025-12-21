@@ -185,18 +185,10 @@ export const Editor: React.FC = () => {
     past: [],
     future: [],
   });
-  const lastSavedMarkdown = useRef<string>("");
+  // Initialize with current markdown value - this ref will be updated as markdown changes
+  const lastSavedMarkdown = useRef<string>(markdown);
   const historyTimeoutRef = useRef<number | null>(null);
   const autoSaveTimeoutRef = useRef<number | null>(null);
-  const isInitializedRef = useRef(false);
-
-  // Initialize lastSavedMarkdown ref only once on mount
-  useEffect(() => {
-    if (!isInitializedRef.current) {
-      lastSavedMarkdown.current = markdown;
-      isInitializedRef.current = true;
-    }
-  }, []); // Empty dependency array - only run on mount
 
   const [searchState, setSearchState] = useState<SearchState>({
     isOpen: false,
@@ -272,14 +264,14 @@ export const Editor: React.FC = () => {
     setMarkdown(next);
   }, [markdown]);
 
-  const onMarkdownChange = (newVal: string) => {
+  const onMarkdownChange = useCallback((newVal: string) => {
     setMarkdown(newVal);
     if (historyTimeoutRef.current)
       window.clearTimeout(historyTimeoutRef.current);
     historyTimeoutRef.current = window.setTimeout(() => {
       pushToHistory(newVal);
     }, 500);
-  };
+  }, [pushToHistory]);
 
   const performSearch = useCallback(
     (text: string, term: string, matchCase: boolean) => {
@@ -401,20 +393,22 @@ export const Editor: React.FC = () => {
         reader.onload = (ev) => {
           try {
             const text = ev.target?.result as string;
-            if (text !== null && text !== undefined) {
-              // Use React.startTransition for non-urgent updates to prevent hook issues
-              React.startTransition(() => {
-                setFileName(file.name.replace(/\.[^/.]+$/, ""));
-                lastSavedMarkdown.current = text;
-                setMarkdown(text);
-                // Clear history when importing new file
-                historyRef.current = { past: [], future: [] };
-              });
-              // Push to history and show toast after state update
-              setTimeout(() => {
-                pushToHistory(text);
-                toast.success(`Imported: ${file.name}`);
-              }, 0);
+            if (text !== null && text !== undefined && text.length >= 0) {
+              // Update all state synchronously to prevent hook order issues
+              const newFileName = file.name.replace(/\.[^/.]+$/, "");
+              
+              // Clear history first
+              historyRef.current = { past: [], future: [] };
+              
+              // Update refs
+              lastSavedMarkdown.current = text;
+              
+              // Update state - all in one batch
+              setFileName(newFileName);
+              setMarkdown(text);
+              
+              // Show success message
+              toast.success(`Imported: ${file.name}`);
             }
           } catch (error) {
             console.error("Error processing file:", error);
@@ -429,7 +423,7 @@ export const Editor: React.FC = () => {
         toast.error("Invalid file type.");
       }
     },
-    [pushToHistory]
+    [] // No dependencies - function is stable
   );
 
   const handleShare = () => {

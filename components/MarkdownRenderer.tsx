@@ -3,10 +3,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { createHighlighter } from 'shiki';
-import mermaid from 'mermaid';
 import { cn } from '../utils';
 import { Check, Copy } from 'lucide-react';
+
+// Dynamic imports for heavy libraries
+const loadShiki = () => import('shiki').then(m => m.createHighlighter);
+const loadMermaid = () => import('mermaid');
 
 interface MarkdownRendererProps {
   content: string;
@@ -16,47 +18,60 @@ interface MarkdownRendererProps {
 
 // Singleton to cache the highlighter instance
 let highlighterPromise: Promise<any> | null = null;
+let mermaidInitialized = false;
 
 const getHighlighter = () => {
   if (!highlighterPromise) {
-    highlighterPromise = createHighlighter({
-      themes: ['one-dark-pro', 'github-dark', 'dark-plus'],
-      langs: [
-        'javascript', 'typescript', 'tsx', 'jsx', 'json', 'css', 'html', 'markdown', 
-        'bash', 'python', 'java', 'go', 'rust', 'c', 'cpp', 'csharp', 'php', 
-        'sql', 'yaml', 'xml', 'dockerfile', 'shell', 'toml', 'ruby', 'swift', 'kotlin'
-      ]
+    highlighterPromise = loadShiki().then((createHighlighter) => {
+      return createHighlighter({
+        themes: ['one-dark-pro', 'github-dark', 'dark-plus'],
+        langs: [
+          'javascript', 'typescript', 'tsx', 'jsx', 'json', 'css', 'html', 'markdown', 
+          'bash', 'python', 'java', 'go', 'rust', 'c', 'cpp', 'csharp', 'php', 
+          'sql', 'yaml', 'xml', 'dockerfile', 'shell', 'toml', 'ruby', 'swift', 'kotlin'
+        ]
+      });
     });
   }
   return highlighterPromise;
 };
 
-// Initialize Mermaid
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'dark',
-  securityLevel: 'loose',
-  themeVariables: {
-    fontFamily: 'Inter',
-    primaryColor: '#d79921',
-    primaryTextColor: '#ebdbb2',
-    primaryBorderColor: '#d79921',
-    lineColor: '#ebdbb2',
-    secondaryColor: '#3c3836',
-    tertiaryColor: '#282828',
+// Initialize Mermaid lazily
+const initializeMermaid = async () => {
+  if (!mermaidInitialized) {
+    const mermaidModule = await loadMermaid();
+    mermaidModule.default.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontFamily: 'Inter',
+        primaryColor: '#d79921',
+        primaryTextColor: '#ebdbb2',
+        primaryBorderColor: '#d79921',
+        lineColor: '#ebdbb2',
+        secondaryColor: '#3c3836',
+        tertiaryColor: '#282828',
+      }
+    });
+    mermaidInitialized = true;
   }
-});
+  return loadMermaid();
+};
 
 const MermaidBlock = ({ chart }: { chart: string }) => {
   const [svg, setSvg] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const render = async () => {
       if (!chart) return;
+      setLoading(true);
       try {
+        const mermaidModule = await initializeMermaid();
         const id = 'mermaid-' + Math.random().toString(36).substring(2, 9);
-        const { svg: renderedSvg } = await mermaid.render(id, chart);
+        const { svg: renderedSvg } = await mermaidModule.default.render(id, chart);
         setSvg(renderedSvg);
         setError(null);
       } catch (err) {
@@ -64,10 +79,20 @@ const MermaidBlock = ({ chart }: { chart: string }) => {
         // Mermaid throws errors easily on incomplete syntax, which is common while typing.
         // We capture it but might choose just to show the code until it fixes.
         setError('Invalid Mermaid Syntax');
+      } finally {
+        setLoading(false);
       }
     };
     render();
   }, [chart]);
+
+  if (loading) {
+    return (
+      <div className="my-6 p-4 border border-[var(--border-primary)] bg-[var(--bg-secondary)] rounded text-[var(--fg-secondary)] text-xs font-mono text-center">
+        <p>Loading diagram...</p>
+      </div>
+    );
+  }
 
   if (error) {
     return (
