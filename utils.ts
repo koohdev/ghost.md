@@ -7,6 +7,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// URL Length Limit for Sharing
+// Most browsers support ~2000-8000 chars, social media/SMS support less
+export const MAX_SHAREABLE_URL_LENGTH = 2000;
+
 // Compression Logic
 export const compressMarkdown = (markdown: string): string => {
   if (!markdown) return "";
@@ -20,6 +24,28 @@ export const decompressMarkdown = (compressed: string): string | null => {
   // So any space in the 'compressed' string read from URL query param was originally a '+'.
   const safeCompressed = compressed.replace(/ /g, "+");
   return LZString.decompressFromEncodedURIComponent(safeCompressed);
+};
+
+// URL Shortening via is.gd API
+export const shortenUrl = async (longUrl: string): Promise<string> => {
+  const encoded = encodeURIComponent(longUrl);
+  const apiUrl = `https://is.gd/create.php?format=json&url=${encoded}`;
+  
+  // Use CORS proxy for client-side requests
+  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+  
+  const response = await fetch(proxyUrl);
+  if (!response.ok) {
+    throw new Error(`HTTP error: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  
+  if (data.shorturl) {
+    return data.shorturl;
+  }
+  
+  throw new Error(data.errormessage || 'Failed to shorten URL');
 };
 
 // Default Markdown Template

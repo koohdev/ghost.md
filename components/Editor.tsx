@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { compressMarkdown, DEFAULT_MARKDOWN, cn } from "../utils";
+import { compressMarkdown, DEFAULT_MARKDOWN, cn, MAX_SHAREABLE_URL_LENGTH, shortenUrl } from "../utils";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { CodeEditor } from "./CodeEditor";
 import { Button, toast, ThemeToggle } from "./ui";
@@ -39,6 +39,9 @@ import {
   Sigma,
   GitGraph,
   GripVertical,
+  AlertTriangle,
+  Clipboard,
+  Loader2,
 } from "lucide-react";
 
 interface SearchState {
@@ -166,6 +169,8 @@ export const Editor: React.FC = () => {
   const [exportFormat, setExportFormat] = useState<ExportFormat>("md");
   const [fileName, setFileName] = useState("document");
   const [shareUrl, setShareUrl] = useState("");
+  const [isUrlTooLarge, setIsUrlTooLarge] = useState(false);
+  const [isShortening, setIsShortening] = useState(false);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<Date>(new Date());
 
@@ -426,11 +431,35 @@ export const Editor: React.FC = () => {
     [] // No dependencies - function is stable
   );
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const compressed = compressMarkdown(markdown);
-    setShareUrl(`${window.location.origin}/#/view?c=${compressed}`);
-    setIsShareModalOpen(true);
-    toast.success("Sharable link generated!");
+    const generatedUrl = `${window.location.origin}/#/view?c=${compressed}`;
+    
+    if (generatedUrl.length > MAX_SHAREABLE_URL_LENGTH) {
+      // URL is too long - try to shorten it
+      setIsShortening(true);
+      setIsShareModalOpen(true);
+      
+      try {
+        const shortUrl = await shortenUrl(generatedUrl);
+        setShareUrl(shortUrl);
+        setIsUrlTooLarge(false);
+        toast.success("Short link generated!");
+      } catch (error) {
+        console.error("Failed to shorten URL:", error);
+        setShareUrl(generatedUrl);
+        setIsUrlTooLarge(true);
+        toast("Could not shorten URL - use alternatives below", { icon: "⚠️" });
+      } finally {
+        setIsShortening(false);
+      }
+    } else {
+      // URL is short enough to use directly
+      setShareUrl(generatedUrl);
+      setIsUrlTooLarge(false);
+      setIsShareModalOpen(true);
+      toast.success("Sharable link generated!");
+    }
   };
 
   const handleExport = () => {
@@ -900,8 +929,22 @@ export const Editor: React.FC = () => {
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] p-6 md:p-8 rounded-xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-[var(--accent-primary)]" />
-                Link Ready
+                {isShortening ? (
+                  <>
+                    <Loader2 className="w-5 h-5 text-[var(--accent-primary)] animate-spin" />
+                    Shortening URL...
+                  </>
+                ) : isUrlTooLarge ? (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                    Document Too Large
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-5 h-5 text-[var(--accent-primary)]" />
+                    Link Ready
+                  </>
+                )}
               </h3>
               <button
                 onClick={() => setIsShareModalOpen(false)}
@@ -910,28 +953,80 @@ export const Editor: React.FC = () => {
                 <X size={20} />
               </button>
             </div>
-            <p className="text-sm text-[var(--fg-secondary)] mb-6 leading-relaxed">
-              Your content is encoded directly into this URL. Privacy by
-              design—no database used.
-            </p>
-            <div className="flex gap-2 mb-8 group">
-              <input
-                type="text"
-                readOnly
-                value={shareUrl}
-                className="flex-1 bg-[var(--bg-primary)] border border-[var(--border-primary)] p-3 rounded text-[10px] font-mono group-hover:border-[var(--accent-primary)] transition-colors min-w-0"
-              />
-              <Button
-                variant="primary"
-                onClick={() => {
-                  navigator.clipboard.writeText(shareUrl);
-                  toast.success("Copied!");
-                }}
-              >
-                <Copy className="w-4 h-4 mr-2" />
-                Copy
-              </Button>
-            </div>
+            
+            {isShortening ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="w-10 h-10 text-[var(--accent-primary)] animate-spin mb-4" />
+                <p className="text-sm text-[var(--fg-secondary)]">Generating short link...</p>
+              </div>
+            ) : isUrlTooLarge ? (
+              <>
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-[var(--fg-secondary)] leading-relaxed">
+                    This document is too large to share via URL ({Math.round(shareUrl.length / 1000)}K chars). 
+                    Use one of these alternatives instead:
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 mb-6">
+                  <Button
+                    variant="primary"
+                    className="w-full justify-center"
+                    onClick={() => {
+                      navigator.clipboard.writeText(markdown);
+                      toast.success("Content copied to clipboard!");
+                    }}
+                  >
+                    <Clipboard className="w-4 h-4 mr-2" />
+                    Copy Content to Clipboard
+                  </Button>
+                  <Button
+                    variant="cyber"
+                    className="w-full justify-center"
+                    onClick={() => {
+                      const blob = new Blob([markdown], { type: "text/markdown" });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement("a");
+                      link.href = url;
+                      link.download = `${fileName.trim() || "document"}.md`;
+                      link.click();
+                      URL.revokeObjectURL(url);
+                      toast.success("File downloaded!");
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download as .md File
+                  </Button>
+                </div>
+                <p className="text-[10px] text-[var(--fg-secondary)] text-center mb-4 opacity-60">
+                  Share the downloaded file via email, cloud storage, or messaging apps.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-[var(--fg-secondary)] mb-6 leading-relaxed">
+                  Your content is encoded directly into this URL. Privacy by
+                  design—no database used.
+                </p>
+                <div className="flex gap-2 mb-8 group">
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareUrl}
+                    className="flex-1 bg-[var(--bg-primary)] border border-[var(--border-primary)] p-3 rounded text-[10px] font-mono group-hover:border-[var(--accent-primary)] transition-colors min-w-0"
+                  />
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      navigator.clipboard.writeText(shareUrl);
+                      toast.success("Copied!");
+                    }}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy
+                  </Button>
+                </div>
+              </>
+            )}
             <Button
               variant="ghost"
               className="w-full"
