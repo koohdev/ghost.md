@@ -26,15 +26,24 @@ export const decompressMarkdown = (compressed: string): string | null => {
   return LZString.decompressFromEncodedURIComponent(safeCompressed);
 };
 
-// URL Shortening via is.gd API
+// URL Shortening via is.gd API (using POST to handle long URLs)
 export const shortenUrl = async (longUrl: string): Promise<string> => {
-  const encoded = encodeURIComponent(longUrl);
-  const apiUrl = `https://is.gd/create.php?format=json&url=${encoded}`;
-  
   // Use CORS proxy for client-side requests
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent('https://is.gd/create.php')}`;
   
-  const response = await fetch(proxyUrl);
+  // Use POST with form data to handle very long URLs
+  const formData = new URLSearchParams();
+  formData.append('format', 'json');
+  formData.append('url', longUrl);
+  
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData.toString(),
+  });
+  
   if (!response.ok) {
     throw new Error(`HTTP error: ${response.status}`);
   }
