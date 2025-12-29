@@ -1,6 +1,6 @@
-import LZString from 'lz-string';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import LZString from "lz-string";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 // Tailwind Merge Helper
 export function cn(...inputs: ClassValue[]) {
@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 
 // Compression Logic
 export const compressMarkdown = (markdown: string): string => {
-  if (!markdown) return '';
+  if (!markdown) return "";
   return LZString.compressToEncodedURIComponent(markdown);
 };
 
@@ -18,7 +18,7 @@ export const decompressMarkdown = (compressed: string): string | null => {
   // Fix for URL encoded spaces: Browser's URL decoding turns '+' into ' '.
   // LZString.compressToEncodedURIComponent uses '+' but no spaces.
   // So any space in the 'compressed' string read from URL query param was originally a '+'.
-  const safeCompressed = compressed.replace(/ /g, '+');
+  const safeCompressed = compressed.replace(/ /g, "+");
   return LZString.decompressFromEncodedURIComponent(safeCompressed);
 };
 

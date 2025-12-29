@@ -118,12 +118,13 @@ const CodeBlock = ({ inline, className, children, ...props }: any) => {
   const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
 
-  // Handle Mermaid diagrams specifically
-  if (!inline && lang === 'mermaid') {
-    return <MermaidBlock chart={codeContent} />;
-  }
-
+  // useEffect MUST be called before any conditional returns (React Rules of Hooks)
   useEffect(() => {
+    // Skip processing for mermaid blocks (they use MermaidBlock component)
+    if (!inline && lang === 'mermaid') {
+      return;
+    }
+    
     // Map application themes to Shiki themes that are guaranteed to be in the bundle
     const appTheme = document.documentElement.getAttribute('data-theme');
     let shikiTheme = 'github-dark';
@@ -157,6 +158,11 @@ const CodeBlock = ({ inline, className, children, ...props }: any) => {
         setHighlightedHtml(null); 
     }
   }, [codeContent, lang, inline]);
+
+  // Handle Mermaid diagrams specifically (after hooks are called)
+  if (!inline && lang === 'mermaid') {
+    return <MermaidBlock chart={codeContent} />;
+  }
 
   const handleCopy = async () => {
     try {
