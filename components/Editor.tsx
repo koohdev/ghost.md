@@ -449,7 +449,8 @@ export const Editor: React.FC = () => {
         console.error("Failed to shorten URL:", error);
         setShareUrl(generatedUrl);
         setIsUrlTooLarge(true);
-        toast("Could not shorten URL - use alternatives below", { icon: "⚠️" });
+        // URL too large even for shortener - show fallback options
+        toast.error("Document too large for URL sharing");
       } finally {
         setIsShortening(false);
       }
@@ -962,9 +963,11 @@ export const Editor: React.FC = () => {
             ) : isUrlTooLarge ? (
               <>
                 <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-[var(--fg-secondary)] leading-relaxed">
-                    This document is too large to share via URL ({Math.round(shareUrl.length / 1000)}K chars). 
-                    Use one of these alternatives instead:
+                  <p className="text-sm text-[var(--fg-secondary)] leading-relaxed mb-2">
+                    <strong>This document is too large for URL sharing.</strong>
+                  </p>
+                  <p className="text-xs text-[var(--fg-secondary)] opacity-70">
+                    {markdown.split(/\s+/).filter(Boolean).length} words • URL-based sharing only works for shorter documents.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 mb-6">
